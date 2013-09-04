@@ -6,5 +6,5 @@ import java.net.InetSocketAddress
 
 object Main extends App {
   val system = ActorSystem("xmpp-server");
-  system.actorOf(Props(new XmppServer(new InetSocketAddress(5227)))) ! Start
+  system.actorOf(Props(new XmppServer(new InetSocketAddress(5222)))) ! Start
 }
