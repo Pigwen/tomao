@@ -14,6 +14,7 @@ import akka.util.ByteString
 import akka.actor.ActorLogging
 import akka.io.TcpPipelineHandler._
 import akka.actor.Deploy
+import org.maodian.tomao.io.XmlValidator
 
 /**
  * @author Cole Wen
@@ -37,6 +38,7 @@ class XmppServer(local: InetSocketAddress) extends Actor with ActorLogging {
     case Connected(remote, _) ⇒
       val init = TcpPipelineHandler.withLogger(log,
         new StringByteStringAdapter("utf-8") >>
+        new XmlValidator >>
           new DelimiterFraming(maxSize = 8192, delimiter = ByteString('>'),
             includeDelimiter = true) >>
           new TcpReadWriteAdapter >>
@@ -58,7 +60,7 @@ class TestActor(init: Init[WithinActorContext, String, String]) extends Actor wi
   def receive = {
     case init.Event(data) ⇒
       log.info("akka-io Server received {} from {}", data, sender)
-      /*val response = serverResponse(input)
+    /*val response = serverResponse(input)
       sender ! init.Command(response)
       log.debug("akka-io Server sent: {}", response.dropRight(1))*/
     case _: Tcp.ConnectionClosed ⇒ context.stop(self)
