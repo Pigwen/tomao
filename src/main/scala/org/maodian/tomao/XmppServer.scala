@@ -23,7 +23,6 @@ class XmppServer(local: InetSocketAddress) extends Actor with ActorLogging {
   import Tcp._
 
   implicit def system = context.system
-  IO(Tcp) ! Bind(self, local)
 
   def receive: Receive = {
     case Start =>
@@ -58,7 +57,7 @@ case object Start
 class TestActor(init: Init[WithinActorContext, String, String]) extends Actor with ActorLogging {
   def receive = {
     case init.Event(data) ⇒
-      log.debug("akka-io Server received {} from {}", data, sender)
+      log.info("akka-io Server received {} from {}", data, sender)
       /*val response = serverResponse(input)
       sender ! init.Command(response)
       log.debug("akka-io Server sent: {}", response.dropRight(1))*/
