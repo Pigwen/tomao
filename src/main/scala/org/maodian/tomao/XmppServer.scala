@@ -15,6 +15,7 @@ import akka.actor.ActorLogging
 import akka.io.TcpPipelineHandler._
 import akka.actor.Deploy
 import org.maodian.tomao.io.XmlValidator
+import org.maodian.tomao.io.XmlTokenizer
 
 /**
  * @author Cole Wen
@@ -38,17 +39,17 @@ class XmppServer(local: InetSocketAddress) extends Actor with ActorLogging {
     case Connected(remote, _) ⇒
       val init = TcpPipelineHandler.withLogger(log,
         new StringByteStringAdapter("utf-8") >>
-        new XmlValidator >>
           new DelimiterFraming(maxSize = 8192, delimiter = ByteString('>'),
             includeDelimiter = true) >>
+          new XmlTokenizer >>
           new TcpReadWriteAdapter >>
           // new SslTlsSupport(sslEngine(remote, client = false)) >>
           new BackpressureBuffer(lowBytes = 100, highBytes = 1000, maxBytes = 1000000))
 
       val connection = sender
-      val handler = context.actorOf(Props(new TestActor(init)).withDeploy(Deploy.local))
+      val handler = context.actorOf(Props(new TestActor(init)))
       val pipeline = context.actorOf(TcpPipelineHandler.props(
-        init, connection, handler).withDeploy(Deploy.local))
+        init, connection, handler))
 
       connection ! Tcp.Register(pipeline)
   }
