@@ -4,18 +4,28 @@
 package org.maodian.tomao
 
 import java.net.InetSocketAddress
+
+import scala.xml.Elem
+
+import org.maodian.tomao.io.xml.ElemByteStringAdapter
+
 import akka.actor.Actor
 import akka.actor.ActorLogging
-import akka.io.TcpPipelineHandler
-import akka.actor.Props
-import akka.io._
 import akka.actor.ActorRef
+import akka.actor.Props
+import akka.actor.actorRef2Scala
+import akka.io.BackpressureBuffer
+import akka.io.DelimiterFraming
+import akka.io.IO
+import akka.io.Tcp
+import akka.io.Tcp.Bind
+import akka.io.Tcp.Bound
+import akka.io.Tcp.Connected
+import akka.io.TcpPipelineHandler
+import akka.io.TcpPipelineHandler.Init
+import akka.io.TcpPipelineHandler.WithinActorContext
+import akka.io.TcpReadWriteAdapter
 import akka.util.ByteString
-import akka.actor.ActorLogging
-import akka.io.TcpPipelineHandler._
-import akka.actor.Deploy
-import org.maodian.tomao.io.XmlValidator
-import org.maodian.tomao.io.XmlTokenizer
 
 /**
  * @author Cole Wen
@@ -38,12 +48,10 @@ class XmppServer(local: InetSocketAddress) extends Actor with ActorLogging {
   def bound(listener: ActorRef): Receive = {
     case Connected(remote, _) ⇒
       val init = TcpPipelineHandler.withLogger(log,
-        new StringByteStringAdapter("utf-8") >>
+        new ElemByteStringAdapter("utf-8") >>
           new DelimiterFraming(maxSize = 8192, delimiter = ByteString('>'),
             includeDelimiter = true) >>
-          new XmlTokenizer >>
           new TcpReadWriteAdapter >>
-          // new SslTlsSupport(sslEngine(remote, client = false)) >>
           new BackpressureBuffer(lowBytes = 100, highBytes = 1000, maxBytes = 1000000))
 
       val connection = sender
@@ -57,10 +65,10 @@ class XmppServer(local: InetSocketAddress) extends Actor with ActorLogging {
 
 case object Start
 
-class TestActor(init: Init[WithinActorContext, String, String]) extends Actor with ActorLogging {
+class TestActor(init: Init[WithinActorContext, Elem, Elem]) extends Actor with ActorLogging {
   def receive = {
     case init.Event(data) ⇒
-      log.info("akka-io Server received {} from {}", data, sender)
+      log.info("akka-io Server received stanzas {} from {}", data, sender)
     /*val response = serverResponse(input)
       sender ! init.Command(response)
       log.debug("akka-io Server sent: {}", response.dropRight(1))*/
