@@ -65,7 +65,7 @@ class XmppServer(local: InetSocketAddress) extends Actor with ActorLogging {
 
 case object Start
 
-class TestActor(init: Init[WithinActorContext, Elem, Elem]) extends Actor with ActorLogging {
+class TestActor(init: Init[WithinActorContext, String, String]) extends Actor with ActorLogging {
   def receive = {
     case init.Event(data) ⇒
       log.info("akka-io Server received stanzas {} from {}", data, sender)
